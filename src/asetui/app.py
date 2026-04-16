@@ -90,8 +90,8 @@ def _zoom_factor(state: AppState) -> float:
 
 def _preset_orientation(key: str) -> np.ndarray:
     if key == "1":
-        # Front: look along +y, up = +z
-        x3 = np.array([0.0, 1.0, 0.0])
+        # Front: look along -y, up = +z (gives screen-right = +x, natural rotation)
+        x3 = np.array([0.0, -1.0, 0.0])
         x2 = np.array([0.0, 0.0, 1.0])
     elif key == "2":
         # Side: look along +x, up = +y (CCW 90° from z-up)
