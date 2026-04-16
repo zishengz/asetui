@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
 from ase.atoms import Atoms
@@ -16,8 +17,8 @@ def read_atoms(path: str | Path) -> Atoms:
     return atoms
 
 
-def read_all_frames(path: str | Path) -> list:
-    """Read frames from an ASE-supported file. Returns a list of Atoms.
+def _read_frames_from_spec(path: str | Path) -> list[Atoms]:
+    """Read frames from a single ASE-supported file spec.
 
     Supports ASE slice notation: path@index, e.g. traj.xyz@:10 or traj.xyz@-1.
     Without a slice, all frames are read.
@@ -33,3 +34,19 @@ def read_all_frames(path: str | Path) -> list:
     if not result:
         raise ValueError("No frames found in input file.")
     return list(result)
+
+
+def read_all_frames(paths: str | Path | Sequence[str | Path]) -> list[Atoms]:
+    """Read one or more ASE-supported file specs into a single frame list."""
+    if isinstance(paths, (str, Path)):
+        specs: Sequence[str | Path] = [paths]
+    else:
+        specs = paths
+
+    frames: list[Atoms] = []
+    for spec in specs:
+        frames.extend(_read_frames_from_spec(spec))
+
+    if not frames:
+        raise ValueError("No frames found in input files.")
+    return frames

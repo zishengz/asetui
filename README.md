@@ -24,6 +24,12 @@
 pip install --user git+https://github.com/zishengz/asetui
 ```
 
+Upgrade to the latest version:
+
+```bash
+pip install --user --upgrade git+https://github.com/zishengz/asetui
+```
+
 From a local clone:
 
 ```bash
@@ -53,7 +59,12 @@ atui examples/Cu4_opt_traj.xyz.gz          # gzipped trajectory
 atui examples/Cu4_opt_traj.xyz.gz@::3      # every 3rd frame
 atui examples/Cu4_opt_traj.xyz.gz@:5       # first 5 frames
 atui examples/Cu4_opt_traj.xyz.gz@-1       # last frame only
+atui examples/*.json                       # shell-expanded files as one frame list
+atui a.json@-1 b.json c.xyz@:10            # mix files and per-file slices
 ```
+
+When you pass multiple inputs, `atui` concatenates their frames in the order
+the shell expands them.
 
 ## Controls
 
