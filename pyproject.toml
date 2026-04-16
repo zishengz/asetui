@@ -13,7 +13,7 @@ authors = [
   { name = "Zisheng Z" }
 ]
 dependencies = [
-  "ase>=3.22",
+  "ase",
   "numpy>=1.20",
 ]
 keywords = ["ase", "atoms", "tui", "cli", "chemistry", "visualization"]
