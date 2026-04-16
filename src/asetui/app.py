@@ -28,7 +28,7 @@ STEP_INCREMENT = 0.25
 MIN_STEP_MULTIPLIER = 0.25
 
 
-@dataclass(slots=True)
+@dataclass
 class AppState:
     label_mode: str = "symbol"
     zoom: float = 1.0
@@ -40,7 +40,7 @@ class AppState:
     orientation: np.ndarray = field(default_factory=lambda: np.eye(3, dtype=float))
 
 
-@dataclass(slots=True)
+@dataclass
 class ScreenCache:
     width: int = -1
     height: int = -1

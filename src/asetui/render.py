@@ -19,7 +19,7 @@ RENDER_CPK = "cpk"
 CELL_ASPECT_Y = 0.5
 
 
-@dataclass(slots=True)
+@dataclass
 class RenderOptions:
     width: int
     height: int
@@ -33,7 +33,7 @@ class RenderOptions:
     render_mode: str = RENDER_WIRE
 
 
-@dataclass(slots=True)
+@dataclass
 class Frame:
     title: str
     canvas: list[str]
@@ -44,7 +44,7 @@ class Frame:
     help_text: str
 
 
-@dataclass(slots=True)
+@dataclass
 class PreparedAtoms:
     formula: str
     centered: np.ndarray
@@ -55,7 +55,7 @@ class PreparedAtoms:
     bonds: tuple[tuple[int, int], ...]
 
 
-@dataclass(slots=True)
+@dataclass
 class Scene:
     xs: np.ndarray
     ys: np.ndarray
