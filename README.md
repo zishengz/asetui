@@ -20,34 +20,50 @@
 
 ## Install
 
+### Install from GitHub
+
 ```bash
 pip install --user git+https://github.com/zishengz/asetui
 ```
 
-Upgrade to the latest version:
+### Upgrade
 
 ```bash
 pip install --user --upgrade git+https://github.com/zishengz/asetui
 ```
 
-From a local clone:
+If an old install is still being picked up, reinstall cleanly:
+
+```bash
+pip uninstall asetui
+pip install --user git+https://github.com/zishengz/asetui
+```
+
+### From local clone
+
+For development or to always use your local checkout:
 
 ```bash
 pip install -e .
 ```
 
+To update later:
+
+```bash
+git pull
+```
+
 ### Making `atui` available in your shell
 
 `pip install --user` places `atui` in `~/.local/bin` (Linux) or
-`~/Library/Python/<version>/bin` (macOS). If needed, add that directory to your
-`PATH`:
+`~/Library/Python/<version>/bin` (macOS). If `atui` is not found, add that directory to your `PATH`:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-On HPC clusters or in conda/venv installs, the script is usually in
-`<prefix>/bin`; add that to `PATH` or call `atui` with the full path.
+For conda, venv, or custom-prefix installs, the executable is usually in
+`<prefix>/bin`.
 
 ## Usage
 
@@ -59,8 +75,8 @@ atui examples/Cu4_opt_traj.xyz.gz          # gzipped trajectory
 atui examples/Cu4_opt_traj.xyz.gz@::3      # every 3rd frame
 atui examples/Cu4_opt_traj.xyz.gz@:5       # first 5 frames
 atui examples/Cu4_opt_traj.xyz.gz@-1       # last frame only
-atui examples/*.json                       # shell-expanded files as one frame list
-atui a.json@-1 b.json c.xyz@:10            # mix files and per-file slices
+atui examples/*xyz*                        # shell-expanded files as one frame list
+atui examples/Cu4_opt_traj.xyz.gz@-3: examples/sn2_irc.xyz@::3           # mix files & slices
 ```
 
 When you pass multiple inputs, `atui` concatenates their frames in the order
