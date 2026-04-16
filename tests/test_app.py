@@ -5,6 +5,7 @@ from asetui.app import (
     RENDER_BALLSTICK,
     RENDER_CPK,
     RENDER_WIRE,
+    _prepared_frame,
     _adjust_step_multiplier,
     _help_overlay_lines,
     _next_render_mode,
@@ -51,3 +52,24 @@ def test_help_overlay_lines_add_frame_controls_only_for_trajectories() -> None:
     assert "[/]" not in " ".join(single)
     assert any("[/]" in line for line in multi)
     assert any("q: quit" in line for line in multi)
+
+
+def test_prepared_frame_is_lazy_and_cached(monkeypatch) -> None:
+    frames = [
+        object(),
+        object(),
+        object(),
+    ]
+    cache = [None, None, None]
+    calls: list[int] = []
+
+    def fake_prepare(frame: object) -> str:
+        calls.append(frames.index(frame))
+        return f"prepared-{frames.index(frame)}"
+
+    monkeypatch.setattr("asetui.app.prepare_atoms", fake_prepare)
+
+    assert _prepared_frame(frames, cache, 1) == "prepared-1"
+    assert _prepared_frame(frames, cache, 1) == "prepared-1"
+    assert _prepared_frame(frames, cache, 2) == "prepared-2"
+    assert calls == [1, 2]

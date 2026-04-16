@@ -266,6 +266,18 @@ def _draw_row_runs(stdscr: curses.window, row: int, text: str, attrs: tuple[int,
         start = end
 
 
+def _prepared_frame(
+    frames: list[Atoms],
+    prepared_cache: list[PreparedAtoms | None],
+    index: int,
+) -> PreparedAtoms:
+    prepared = prepared_cache[index]
+    if prepared is None:
+        prepared = prepare_atoms(frames[index])
+        prepared_cache[index] = prepared
+    return prepared
+
+
 def _draw_screen(
     stdscr: curses.window,
     atoms: PreparedAtoms,
@@ -376,13 +388,13 @@ def run_app(frames: Atoms | list, initial_state: AppState | None = None) -> int:
         stdscr.timeout(50)
         colors = ColorManager()
         colors.setup()
-        all_prepared = [prepare_atoms(f) for f in frames]
+        prepared_cache: list[PreparedAtoms | None] = [None] * n_frames
         cache = ScreenCache()
         show_help_overlay = False
 
         state = initial_state or AppState()
         state.frame_index = max(0, min(state.frame_index, n_frames - 1))
-        prepared = all_prepared[state.frame_index]
+        prepared = _prepared_frame(frames, prepared_cache, state.frame_index)
         _draw_screen(stdscr, prepared, state, colors, cache, n_frames)
 
         while True:
@@ -404,10 +416,10 @@ def run_app(frames: Atoms | list, initial_state: AppState | None = None) -> int:
                 state.mode = "rotate"
             elif key == ord("]") and n_frames > 1:
                 state.frame_index = (state.frame_index + 1) % n_frames
-                prepared = all_prepared[state.frame_index]
+                prepared = _prepared_frame(frames, prepared_cache, state.frame_index)
             elif key == ord("[") and n_frames > 1:
                 state.frame_index = (state.frame_index - 1) % n_frames
-                prepared = all_prepared[state.frame_index]
+                prepared = _prepared_frame(frames, prepared_cache, state.frame_index)
             elif key == curses.KEY_LEFT:
                 if state.mode == "translate":
                     state.offset_x -= _translation_step(state) / max(state.zoom, 1e-6)
