@@ -14,7 +14,7 @@ authors = [
 ]
 dependencies = [
   "ase",
-  "numpy>=1.20",
+  "numpy",
 ]
 keywords = ["ase", "atoms", "tui", "cli", "chemistry", "visualization"]
 classifiers = [
