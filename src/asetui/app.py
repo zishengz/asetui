@@ -7,7 +7,6 @@ import numpy as np
 
 from ase.atoms import Atoms
 from ase.data.colors import jmol_colors
-from ase.geometry.cell import complete_cell
 
 from asetui.render import (
     BOND_COLOR,
@@ -37,6 +36,7 @@ class AppState:
     step_multiplier: float = 1.0
     mode: str = "rotate"
     render_mode: str = RENDER_WIRE
+    show_help: bool = True
     orientation: np.ndarray = field(default_factory=lambda: np.eye(3, dtype=float))
 
 
@@ -100,32 +100,22 @@ def _zoom_factor(state: AppState) -> float:
     return 1.0 + BASE_ZOOM_DELTA * state.step_multiplier
 
 
-def _preset_orientation(atoms: Atoms, key: str) -> np.ndarray:
-    if key == "3":
-        i, j = 0, 1
-    elif key == "1":
-        i, j = 2, 0
+def _preset_orientation(key: str) -> np.ndarray:
+    if key == "1":
+        # Front: look along +y, up = +z
+        x3 = np.array([0.0, 1.0, 0.0])
+        x2 = np.array([0.0, 0.0, 1.0])
     elif key == "2":
-        i, j = 1, 2
+        # Side: look along +x, up = +z
+        x3 = np.array([1.0, 0.0, 0.0])
+        x2 = np.array([0.0, 0.0, 1.0])
+    elif key == "3":
+        # Top: look along +z, up = +y
+        x3 = np.array([0.0, 0.0, 1.0])
+        x2 = np.array([0.0, 1.0, 0.0])
     else:
         raise ValueError(f"Unsupported preset key: {key}")
-
-    axes = complete_cell(atoms.cell)
-    x1 = axes[i].astype(float)
-    x2 = axes[j].astype(float)
-
-    norm1 = float(np.linalg.norm(x1))
-    norm2 = float(np.linalg.norm(x2))
-    if norm1 < 1e-12 or norm2 < 1e-12:
-        return np.eye(3, dtype=float)
-
-    x1 /= norm1
-    x2 = x2 - x1 * float(np.dot(x1, x2))
-    norm2 = float(np.linalg.norm(x2))
-    if norm2 < 1e-12:
-        return np.eye(3, dtype=float)
-    x2 /= norm2
-    x3 = np.cross(x1, x2)
+    x1 = np.cross(x2, x3)
     return np.array([x1, x2, x3], dtype=float).T
 
 
@@ -275,7 +265,7 @@ def _draw_screen(
         canvas_top = 1
         for row_index, line in enumerate(frame.canvas, start=canvas_top):
             source_row = row_index - canvas_top
-            if row_index >= height - 2:
+            if row_index >= height - 3:
                 break
             row_state = _render_runs(
                 line,
@@ -290,17 +280,25 @@ def _draw_screen(
                 stdscr.clrtoeol()
                 _draw_row_runs(stdscr, row_index, row_state[0], row_state[1])
                 cache.rows[row_index] = row_state
+        if height >= 3:
+            status1_text = frame.status[: max(width - 1, 0)]
+            status1_state = (status1_text, ())
+            if cache.rows.get(height - 3) != status1_state:
+                stdscr.move(height - 3, 0)
+                stdscr.clrtoeol()
+                stdscr.addstr(height - 3, 0, status1_text)
+                cache.rows[height - 3] = status1_state
         if height >= 2:
-            status = f"{frame.status}  mode={state.mode} step={state.step_multiplier:.2f}x"
-            status_text = status[: max(width - 1, 0)]
-            status_state = (status_text, ())
-            if cache.rows.get(height - 2) != status_state:
+            status2 = f"mode={state.mode} step={state.step_multiplier:.2f}x"
+            status2_text = status2[: max(width - 1, 0)]
+            status2_state = (status2_text, ())
+            if cache.rows.get(height - 2) != status2_state:
                 stdscr.move(height - 2, 0)
                 stdscr.clrtoeol()
-                stdscr.addstr(height - 2, 0, status_text)
-                cache.rows[height - 2] = status_state
+                stdscr.addstr(height - 2, 0, status2_text)
+                cache.rows[height - 2] = status2_state
         if height >= 1:
-            help_text = frame.help_text[: max(width - 1, 0)]
+            help_text = (frame.help_text if state.show_help else "h show keys")[: max(width - 1, 0)]
             help_state = (help_text, ())
             if cache.rows.get(height - 1) != help_state:
                 stdscr.move(height - 1, 0)
@@ -373,8 +371,10 @@ def run_app(atoms: Atoms, initial_state: AppState | None = None) -> int:
                 state.step_multiplier = _adjust_step_multiplier(state.step_multiplier, -1)
             elif key in (ord("l"), ord("L")):
                 state.label_mode = {"symbol": "index", "index": "off", "off": "symbol"}[state.label_mode]
+            elif key in (ord("h"), ord("H")):
+                state.show_help = not state.show_help
             elif key in (ord("1"), ord("2"), ord("3")):
-                state.orientation = _preset_orientation(atoms, chr(key))
+                state.orientation = _preset_orientation(chr(key))
             elif key == ord("0"):
                 state.render_mode = _next_render_mode(state.render_mode)
             elif key in (ord("c"), ord("C")):

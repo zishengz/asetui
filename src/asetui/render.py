@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import cos, sin
+from math import asin, atan2, cos, degrees, sin
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -164,7 +164,7 @@ def _build_scene(prepared: PreparedAtoms, options: RenderOptions) -> Scene:
     rotated[:, 1] += options.offset_y
 
     plot_width = max(4, options.width - 2)
-    plot_height = max(3, options.height - 4)
+    plot_height = max(3, options.height - 5)
     xs = rotated[:, 0]
     ys = rotated[:, 1]
     zs = rotated[:, 2]
@@ -202,15 +202,21 @@ def _empty_frame(message: str) -> Frame:
 
 
 def _base_status(options: RenderOptions) -> str:
+    if options.orientation is not None:
+        d = options.orientation[:, 2]
+        az = round(degrees(atan2(float(d[1]), float(d[0]))))
+        el = round(degrees(asin(max(-1.0, min(1.0, float(d[2]))))))
+        view_str = f"az={az:+d} el={el:+d}"
+    else:
+        view_str = f"yaw={options.yaw:.2f} pitch={options.pitch:.2f}"
     return (
-        f"mode={options.render_mode} view=relative zoom={options.zoom:.2f} "
-        f"pan=({options.offset_x:+.2f},{options.offset_y:+.2f}) "
-        f"depth=on aspect={CELL_ASPECT_Y:.2f} labels={options.label_mode}"
+        f"mode={options.render_mode} {view_str} zoom={options.zoom:.2f} "
+        f"pan=({options.offset_x:+.2f},{options.offset_y:+.2f}) labels={options.label_mode}"
     )
 
 
 def _help_text() -> str:
-    return "t translate  r rotate  arrows move  1/2/3 views  </> step  =/- zoom  l labels  0 mode-cycle  c reset  q quit"
+    return "arrows move  t/r translate/rotate  1/2/3 views  =/- zoom  </> step  l labels  0 mode  c reset  h hide  q quit"
 
 
 def _draw_wire_line(
