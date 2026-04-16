@@ -13,6 +13,7 @@ Inspect crystal structures, molecules, and slabs directly over SSH on remote HPC
 - Multiple render modes: `wire`, `ballstick`, `cpk`
 - Preset views: front (`1`), side (`2`), top (`3`)
 - Atom labels cycling through element symbol, index, or off
+- Multi-frame trajectory support with `[` / `]` navigation
 
 ## Install
 
@@ -41,8 +42,10 @@ atui structure.xyz
 | `1` / `2` / `3` | preset views: front / side / top |
 | `=` / `-` | zoom in / out |
 | `<` / `>` | change step size |
+| `[` / `]` | previous / next frame (trajectories) |
 | `l` | cycle labels: symbol → index → off |
 | `0` | cycle render modes |
+| `h` | show / hide key reference |
 | `c` | reset view |
 | `q` | quit |
 
