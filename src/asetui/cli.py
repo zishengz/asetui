@@ -12,7 +12,12 @@ def build_parser() -> argparse.ArgumentParser:
         prog="atui",
         description="Interactive terminal viewer for ASE-supported structure files.",
     )
-    parser.add_argument("input", type=Path, help="Path to a structure file, such as XYZ or CIF.")
+    parser.add_argument(
+        "input",
+        type=str,
+        help="Path to a structure file (e.g. structure.xyz). "
+             "Append @index for ASE slice notation, e.g. traj.xyz@:10 or traj.xyz@-1.",
+    )
     return parser
 
 

@@ -17,8 +17,17 @@ def read_atoms(path: str | Path) -> Atoms:
 
 
 def read_all_frames(path: str | Path) -> list:
-    """Read all frames from an ASE-supported file. Returns a list of Atoms."""
-    result = read(Path(path), index=":")
+    """Read frames from an ASE-supported file. Returns a list of Atoms.
+
+    Supports ASE slice notation: path@index, e.g. traj.xyz@:10 or traj.xyz@-1.
+    Without a slice, all frames are read.
+    """
+    path_str = str(path)
+    if "@" in path_str:
+        filepath, index_str = path_str.rsplit("@", 1)
+    else:
+        filepath, index_str = path_str, ":"
+    result = read(filepath, index=index_str)
     if isinstance(result, Atoms):
         return [result]
     if not result:
