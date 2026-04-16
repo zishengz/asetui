@@ -1,23 +1,26 @@
 # asetui
 
-`asetui` is a lightweight terminal viewer for ASE `Atoms` objects.
+`asetui` is a lightweight terminal viewer for ASE `Atoms` objects — no GUI, no X11, no display server required.
 
-It reads structure files through ASE and renders them directly in the terminal
-with interactive rotation, translation, zoom, labels, and multiple display
-modes.
+Inspect crystal structures, molecules, and slabs directly over SSH on remote HPC clusters, where launching VESTA or ASE's GUI is slow or unavailable.
 
 ## Features
 
-- Read common ASE-supported formats such as `xyz`, `cif`, and more
-- Interactive terminal controls
+- Reads all ASE-supported formats (`xyz`, `cif`, `vasp`, and more)
+- Runs entirely in the terminal over any SSH connection
 - Jmol-style element coloring
-- Multiple render modes:
-  - `wire`
-  - `ballstick`
-  - `cpk`
-- ASE-style preset views on `1`, `2`, and `3`
+- Interactive rotation, translation, and zoom
+- Multiple render modes: `wire`, `ballstick`, `cpk`
+- Preset views: front (`1`), side (`2`), top (`3`)
+- Atom labels cycling through element symbol, index, or off
 
 ## Install
+
+```bash
+pip install --user git+https://github.com/zishengz/asetui
+```
+
+Or from a local clone:
 
 ```bash
 pip install -e .
@@ -29,32 +32,26 @@ pip install -e .
 atui structure.xyz
 ```
 
-Example:
-
-```bash
-atui examples/H2O.xyz
-```
-
 ## Controls
 
-- `r`: rotate mode
-- `t`: translate mode
-- Arrow keys: move or rotate
-- `1` / `2` / `3`: ASE-style preset views
-- `=` / `-`: zoom in and out
-- `<` / `>`: change step size
-- `l`: toggle element labels
-- `0`: cycle render modes
-- `c`: reset view
-- `q`: quit
+| Key | Action |
+|-----|--------|
+| `r` / `t` | rotate / translate mode |
+| Arrow keys | rotate or pan |
+| `1` / `2` / `3` | preset views: front / side / top |
+| `=` / `-` | zoom in / out |
+| `<` / `>` | change step size |
+| `l` | cycle labels: symbol → index → off |
+| `0` | cycle render modes |
+| `c` | reset view |
+| `q` | quit |
 
 ## Render Modes
 
-- `wire`: character-based structural view with bonds
-- `ballstick`: raster-like terminal view with split-color bonds
-- `cpk`: larger space-filling atom view
+- `wire`: character-based view with bonds and depth cues
+- `ballstick`: filled atom blobs with split-color bonds
+- `cpk`: space-filling view, atom size proportional to covalent radius
 
 ## Why
 
-`asetui` is meant to be a small, direct way to inspect atomistic structures
-from the terminal without opening a full desktop GUI.
+Visualizing structures on remote machines typically means tunneling X11, waiting for a slow GUI to load over a high-latency connection, or copying files locally first. `asetui` runs in any terminal, responds instantly, and requires nothing beyond Python and ASE.
