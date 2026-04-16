@@ -14,3 +14,13 @@ def read_atoms(path: str | Path) -> Atoms:
             raise ValueError("No frames found in input file.")
         return atoms[0]
     return atoms
+
+
+def read_all_frames(path: str | Path) -> list:
+    """Read all frames from an ASE-supported file. Returns a list of Atoms."""
+    result = read(Path(path), index=":")
+    if isinstance(result, Atoms):
+        return [result]
+    if not result:
+        raise ValueError("No frames found in input file.")
+    return list(result)

@@ -216,7 +216,7 @@ def _base_status(options: RenderOptions) -> str:
 
 
 def _help_text() -> str:
-    return "arrows move  t/r translate/rotate  1/2/3 views  =/- zoom  </> step  l labels  0 mode  c reset  h hide  q quit"
+    return "arrows move  t/r translate/rotate  1/2/3 views  =/- zoom  </> step  [/] frames  l labels  0 mode  c reset  h hide  q quit"
 
 
 def _draw_wire_line(

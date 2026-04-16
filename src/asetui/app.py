@@ -37,6 +37,7 @@ class AppState:
     mode: str = "rotate"
     render_mode: str = RENDER_WIRE
     show_help: bool = True
+    frame_index: int = 0
     orientation: np.ndarray = field(default_factory=lambda: np.eye(3, dtype=float))
 
 
@@ -223,6 +224,7 @@ def _draw_screen(
     state: AppState,
     colors: ColorManager,
     cache: ScreenCache,
+    n_frames: int = 1,
 ) -> None:
     height, width = stdscr.getmaxyx()
     frame = build_frame(
@@ -248,7 +250,8 @@ def _draw_screen(
         cache.rows.clear()
 
     try:
-        title_text = frame.title[: max(width - 1, 0)]
+        title = f"({state.frame_index + 1}/{n_frames}) {frame.title}" if n_frames > 1 else frame.title
+        title_text = title[: max(width - 1, 0)]
         title_state = (title_text, ())
         if cache.rows.get(0) != title_state:
             stdscr.move(0, 0)
@@ -310,23 +313,29 @@ def _draw_screen(
     stdscr.refresh()
 
 
-def run_app(atoms: Atoms, initial_state: AppState | None = None) -> int:
+def run_app(frames: Atoms | list, initial_state: AppState | None = None) -> int:
+    if isinstance(frames, Atoms):
+        frames = [frames]
+    n_frames = len(frames)
+
     def _main(stdscr: curses.window) -> int:
         curses.curs_set(0)
         stdscr.keypad(True)
         stdscr.timeout(100)
         colors = ColorManager()
         colors.setup()
-        prepared = prepare_atoms(atoms)
+        all_prepared = [prepare_atoms(f) for f in frames]
         cache = ScreenCache()
 
         state = initial_state or AppState()
-        _draw_screen(stdscr, prepared, state, colors, cache)
+        state.frame_index = max(0, min(state.frame_index, n_frames - 1))
+        prepared = all_prepared[state.frame_index]
+        _draw_screen(stdscr, prepared, state, colors, cache, n_frames)
 
         while True:
             key = stdscr.getch()
             if key == -1 or key == curses.KEY_RESIZE:
-                _draw_screen(stdscr, prepared, state, colors, cache)
+                _draw_screen(stdscr, prepared, state, colors, cache, n_frames)
                 continue
             if key in (ord("q"), ord("Q")):
                 return 0
@@ -334,6 +343,12 @@ def run_app(atoms: Atoms, initial_state: AppState | None = None) -> int:
                 state.mode = "translate"
             elif key in (ord("r"), ord("R")):
                 state.mode = "rotate"
+            elif key == ord("]") and n_frames > 1:
+                state.frame_index = (state.frame_index + 1) % n_frames
+                prepared = all_prepared[state.frame_index]
+            elif key == ord("[") and n_frames > 1:
+                state.frame_index = (state.frame_index - 1) % n_frames
+                prepared = all_prepared[state.frame_index]
             elif key == curses.KEY_LEFT:
                 if state.mode == "translate":
                     state.offset_x -= _translation_step(state) / max(state.zoom, 1e-6)
@@ -371,7 +386,9 @@ def run_app(atoms: Atoms, initial_state: AppState | None = None) -> int:
             elif key == ord("0"):
                 state.render_mode = _next_render_mode(state.render_mode)
             elif key in (ord("c"), ord("C")):
+                fi = state.frame_index
                 state = AppState()
-            _draw_screen(stdscr, prepared, state, colors, cache)
+                state.frame_index = fi
+            _draw_screen(stdscr, prepared, state, colors, cache, n_frames)
 
     return curses.wrapper(_main)
