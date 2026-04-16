@@ -339,12 +339,12 @@ def run_app(atoms: Atoms, initial_state: AppState | None = None) -> int:
                 if state.mode == "translate":
                     state.offset_x -= _translation_step(state) / max(state.zoom, 1e-6)
                 else:
-                    _apply_view_rotation(state, _rotation_around_axis(state.orientation[:, 1], -_rotation_step(state)))
+                    _apply_view_rotation(state, _rotation_around_axis(state.orientation[:, 1], _rotation_step(state)))
             elif key == curses.KEY_RIGHT:
                 if state.mode == "translate":
                     state.offset_x += _translation_step(state) / max(state.zoom, 1e-6)
                 else:
-                    _apply_view_rotation(state, _rotation_around_axis(state.orientation[:, 1], _rotation_step(state)))
+                    _apply_view_rotation(state, _rotation_around_axis(state.orientation[:, 1], -_rotation_step(state)))
             elif key == curses.KEY_UP:
                 if state.mode == "translate":
                     state.offset_y += _translation_step(state) / max(state.zoom, 1e-6)
