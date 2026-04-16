@@ -31,6 +31,8 @@ pip install -e .
 
 ```bash
 atui structure.xyz
+atui trajectory.xyz@:10    # first 10 frames
+atui trajectory.xyz@-1     # last frame
 ```
 
 ## Controls
