@@ -7,7 +7,7 @@
 
 | Molecule | Surface | Relax | IRC |
 |--|--|--|--|
-| <img src="examples/record1.gif" width="420" alt="asetui example 1"> | <img src="examples/record2.gif" width="420" alt="asetui example 2"> | <img src="examples/record4.gif" width="420" alt="asetui example 3"> | <img src="examples/record3.gif" width="420" alt="asetui example 4"> |
+| <img src="examples/record1.gif" width="200" alt="asetui example 1"> | <img src="examples/record2.gif" width="200" alt="asetui example 2"> | <img src="examples/record4.gif" width="200" alt="asetui example 3"> | <img src="examples/record3.gif" width="200" alt="asetui example 4"> |
 
 ## Features
 
@@ -82,3 +82,7 @@ atui examples/Cu4_opt_traj.xyz.gz@-1       # last frame only
 - [ ] Manipulation of structures
 - [ ] File IO
 - [ ] TBD
+
+## License
+
+[MIT License](LICENSE). Copyright (c) 2026 Zisheng Zhang (Stanford).
