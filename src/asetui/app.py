@@ -98,9 +98,11 @@ def _preset_orientation(key: str) -> np.ndarray:
         x3 = np.array([0.0, 1.0, 0.0])
         return np.array([x1, x2, x3], dtype=float).T
     elif key == "2":
-        # Side: look along +x, up = +y
+        # Side: look along +x, up = +z, right = +y
+        x1 = np.array([0.0, 1.0, 0.0])
+        x2 = np.array([0.0, 0.0, 1.0])
         x3 = np.array([1.0, 0.0, 0.0])
-        x2 = np.array([0.0, 1.0, 0.0])
+        return np.array([x1, x2, x3], dtype=float).T
     elif key == "3":
         # Top: look along +z, up = +y
         x3 = np.array([0.0, 0.0, 1.0])
