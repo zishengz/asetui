@@ -2,7 +2,7 @@
 
 `asetui` is a lightweight terminal viewer for ASE `Atoms` objects — no GUI, no X11, no display server required.
 
-Inspect crystal structures, molecules, and slabs directly over SSH on remote HPC clusters, where launching VESTA or ASE's GUI is slow or unavailable.
+Inspect crystal structures, molecules, and slabs directly over SSH on remote HPC clusters where launching any GUI application is slow or unavailable.
 
 ## Features
 
@@ -44,9 +44,11 @@ your `PATH` or call `atui` with the full path.
 ## Usage
 
 ```bash
-atui structure.xyz
-atui trajectory.xyz@:10    # first 10 frames
-atui trajectory.xyz@-1     # last frame
+atui examples/H2O.xyz                      # single structure
+atui examples/Cu111_CO.vasp                # VASP format
+atui examples/Cu4_opt_traj.xyz.gz          # gzipped trajectory
+atui examples/Cu4_opt_traj.xyz.gz@:5       # first 5 frames
+atui examples/Cu4_opt_traj.xyz.gz@-1       # last frame only
 ```
 
 ## Controls
