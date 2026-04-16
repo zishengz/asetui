@@ -23,7 +23,7 @@ CELL_ASPECT_Y = 0.5
 class RenderOptions:
     width: int
     height: int
-    show_labels: bool = False
+    label_mode: str = "symbol"
     yaw: float = 0.0
     pitch: float = 0.0
     zoom: float = 1.0
@@ -103,13 +103,17 @@ def _rotate_positions(
 
 
 def _projector(span: float, plot_width: int, plot_height: int):
+    physical_w = plot_width - 1
+    physical_h = (plot_height - 1) / CELL_ASPECT_Y
+    scale = min(physical_w, physical_h) / span
+
     def project_x(value: float) -> int:
-        normalized = ((value / span) + 0.5) * (plot_width - 1)
-        return max(0, min(plot_width - 1, round(normalized)))
+        pixel = value * scale + (plot_width - 1) / 2.0
+        return max(0, min(plot_width - 1, round(pixel)))
 
     def project_y(value: float) -> int:
-        normalized = (0.5 - ((value * CELL_ASPECT_Y) / span)) * (plot_height - 1)
-        return max(0, min(plot_height - 1, round(normalized)))
+        pixel = -value * scale * CELL_ASPECT_Y + (plot_height - 1) / 2.0
+        return max(0, min(plot_height - 1, round(pixel)))
 
     return project_x, project_y
 
@@ -198,7 +202,7 @@ def _base_status(options: RenderOptions) -> str:
     return (
         f"mode={options.render_mode} view=relative zoom={options.zoom:.2f} "
         f"pan=({options.offset_x:+.2f},{options.offset_y:+.2f}) "
-        f"depth=on aspect={CELL_ASPECT_Y:.2f} labels={'on' if options.show_labels else 'off'}"
+        f"depth=on aspect={CELL_ASPECT_Y:.2f} labels={options.label_mode}"
     )
 
 
@@ -296,8 +300,9 @@ def _draw_ballstick_line(
             y0 += sy
 
 
-def _wire_atom_token(symbol: str, show_labels: bool, depth: float) -> str:
-    core = symbol if show_labels else " " * len(symbol)
+def _wire_atom_token(symbol: str, index: int, label_mode: str, depth: float) -> str:
+    text = {"symbol": symbol, "index": str(index), "off": " " * len(symbol)}.get(label_mode, symbol)
+    core = text
     if depth > 0.33:
         left, right = "[", "]"
     elif depth < -0.33:
@@ -324,10 +329,6 @@ def _overlay_label(
     end_col = start_col + len(label)
     if start_col < 0 or end_col > len(canvas[0]):
         return
-    for offset in range(len(label)):
-        target_col = start_col + offset
-        if depth < depths[row][target_col]:
-            return
     for offset, char in enumerate(label):
         target_col = start_col + offset
         canvas[row][target_col] = char
@@ -356,7 +357,7 @@ def _build_wire_frame(prepared: PreparedAtoms, options: RenderOptions, scene: Sc
         x = scene.project_x(float(scene.xs[index]))
         y = scene.project_y(float(scene.ys[index]))
         atom_depth = _normalize_depth(float(scene.zs[index]), scene.min_z, scene.max_z)
-        token = _wire_atom_token(scene.symbols[index], options.show_labels, atom_depth)
+        token = _wire_atom_token(scene.symbols[index], index, options.label_mode, atom_depth)
         start_col = x - len(token) // 2
         for offset, char in enumerate(token):
             col = start_col + offset
@@ -419,7 +420,8 @@ def _build_ballstick_frame(prepared: PreparedAtoms, options: RenderOptions, scen
                 colors[row][col] = int(scene.numbers[index])
                 depths[row][col] = atom_depth
 
-        if options.show_labels:
+        if options.label_mode != "off":
+            label_text = scene.symbols[index] if options.label_mode == "symbol" else str(index)
             _overlay_label(
                 canvas,
                 colors,
@@ -427,7 +429,7 @@ def _build_ballstick_frame(prepared: PreparedAtoms, options: RenderOptions, scen
                 label_mask,
                 cy,
                 cx,
-                scene.symbols[index],
+                label_text,
                 int(scene.numbers[index]),
                 atom_depth,
             )
@@ -455,7 +457,7 @@ def _build_cpk_frame(prepared: PreparedAtoms, options: RenderOptions, scene: Sce
         cy = scene.project_y(float(scene.ys[index]))
         atom_depth = _normalize_depth(float(scene.zs[index]), scene.min_z, scene.max_z)
         cov_radius = float(scene.radii[index])
-        radius = (1.8 + cov_radius * 3.4 + 0.65 * ((atom_depth + 1.0) * 0.5)) * options.zoom
+        radius = (3.5 + cov_radius * 6.2 + 0.65 * ((atom_depth + 1.0) * 0.5)) * options.zoom
         y_radius = max(1.8, radius * CELL_ASPECT_Y)
         core = "█" if atom_depth > 0.33 else "▓" if atom_depth > -0.33 else "▒"
         rim = "▓" if atom_depth > -0.2 else "▒"
@@ -470,7 +472,8 @@ def _build_cpk_frame(prepared: PreparedAtoms, options: RenderOptions, scene: Sce
                 colors[row][col] = int(scene.numbers[index])
                 depths[row][col] = atom_depth
 
-        if options.show_labels:
+        if options.label_mode != "off":
+            label_text = scene.symbols[index] if options.label_mode == "symbol" else str(index)
             _overlay_label(
                 canvas,
                 colors,
@@ -478,7 +481,7 @@ def _build_cpk_frame(prepared: PreparedAtoms, options: RenderOptions, scene: Sce
                 label_mask,
                 cy,
                 cx,
-                scene.symbols[index],
+                label_text,
                 int(scene.numbers[index]),
                 atom_depth,
             )

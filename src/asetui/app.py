@@ -30,7 +30,7 @@ MIN_STEP_MULTIPLIER = 0.25
 
 @dataclass(slots=True)
 class AppState:
-    show_labels: bool = True
+    label_mode: str = "symbol"
     zoom: float = 1.0
     offset_x: float = 0.0
     offset_y: float = 0.0
@@ -178,18 +178,18 @@ class ColorManager:
             return emphasis
 
         rgb = tuple(float(value) for value in jmol_colors[color_code])
-        luminance = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
-        fg = _rgb_to_xterm_index(rgb) if curses.COLORS >= 256 else _nearest_basic_color(rgb)
         if is_label:
-            label_fg = curses.COLOR_BLACK if luminance > 0.6 else curses.COLOR_WHITE
-            pair_key = (label_fg, fg)
-            pair_fg = label_fg
-            pair_bg = fg
-            emphasis = curses.A_BOLD
+            scale = 0.55 if depth < -0.33 else 1.2 if depth > 0.33 else 1.0
+            bg_rgb = tuple(min(1.0, c * scale) for c in rgb)
+            pair_bg = _rgb_to_xterm_index(bg_rgb) if curses.COLORS >= 256 else _nearest_basic_color(bg_rgb)
+            lum = 0.2126 * bg_rgb[0] + 0.7152 * bg_rgb[1] + 0.0722 * bg_rgb[2]
+            pair_fg = curses.COLOR_BLACK if lum > 0.35 else curses.COLOR_WHITE
+            emphasis = curses.A_NORMAL
         else:
-            pair_key = (fg, self.background)
-            pair_fg = fg
+            element_color = _rgb_to_xterm_index(rgb) if curses.COLORS >= 256 else _nearest_basic_color(rgb)
+            pair_fg = element_color
             pair_bg = self.background
+        pair_key = (pair_fg, pair_bg)
         pair_id = self.pairs.get(pair_key)
         if pair_id is None:
             pair_id = len(self.pairs) + 1
@@ -247,7 +247,7 @@ def _draw_screen(
         RenderOptions(
             width=width,
             height=height,
-            show_labels=state.show_labels,
+            label_mode=state.label_mode,
             zoom=state.zoom,
             offset_x=state.offset_x,
             offset_y=state.offset_y,
@@ -372,7 +372,7 @@ def run_app(atoms: Atoms, initial_state: AppState | None = None) -> int:
             elif key == ord("<"):
                 state.step_multiplier = _adjust_step_multiplier(state.step_multiplier, -1)
             elif key in (ord("l"), ord("L")):
-                state.show_labels = not state.show_labels
+                state.label_mode = {"symbol": "index", "index": "off", "off": "symbol"}[state.label_mode]
             elif key in (ord("1"), ord("2"), ord("3")):
                 state.orientation = _preset_orientation(atoms, chr(key))
             elif key == ord("0"):

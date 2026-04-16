@@ -13,11 +13,6 @@ def build_parser() -> argparse.ArgumentParser:
         description="Interactive terminal viewer for ASE-supported structure files.",
     )
     parser.add_argument("input", type=Path, help="Path to a structure file, such as XYZ or CIF.")
-    parser.add_argument(
-        "--labels",
-        action="store_true",
-        help="Start with element symbols instead of single-character atom markers.",
-    )
     return parser
 
 
@@ -30,7 +25,7 @@ def main() -> int:
     except Exception as exc:  # pragma: no cover - thin CLI wrapper
         parser.exit(1, f"atui: {exc}\n")
 
-    return run_app(atoms, AppState(show_labels=args.labels))
+    return run_app(atoms, AppState())
 
 
 if __name__ == "__main__":
