@@ -1,8 +1,8 @@
 # asetui
 
-`asetui` is a lightweight terminal viewer for ASE `Atoms` objects — no GUI, no X11, no display server required.
+`asetui` is a lightweight in-terminal viewer for ASE `Atoms` objects — no GUI, no X11, no display server required.
 
-Inspect crystal structures, molecules, and slabs directly over SSH on remote HPC clusters where launching any GUI application is slow or unavailable.
+Inspect crystal structures, molecules, and slabs directly from your terminal, either locally or over SSH on remote HPC clusters where launching any GUI application is slow or unavailable.
 
 ## Features
 
@@ -76,3 +76,9 @@ atui examples/Cu4_opt_traj.xyz.gz@-1       # last frame only
 ## Why
 
 Visualizing structures on remote machines typically means tunneling X11, waiting for a slow GUI to load over a high-latency connection, or copying files locally first. `asetui` runs in any terminal, responds instantly, and requires nothing beyond Python and ASE.
+
+## To-dos
+
+- [ ] Manipulation of structures
+- [ ] File IO
+- [ ] TBD
