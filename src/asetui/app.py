@@ -31,7 +31,7 @@ MIN_STEP_MULTIPLIER = 0.25
 @dataclass
 class AppState:
     label_mode: str = "symbol"
-    zoom: float = 1.0
+    zoom: float = 1.5
     offset_x: float = 0.0
     offset_y: float = 0.0
     step_multiplier: float = 1.0
@@ -104,9 +104,9 @@ def _preset_orientation(atoms: Atoms, key: str) -> np.ndarray:
     if key == "3":
         i, j = 0, 1
     elif key == "1":
-        i, j = 1, 2
-    elif key == "2":
         i, j = 2, 0
+    elif key == "2":
+        i, j = 1, 2
     else:
         raise ValueError(f"Unsupported preset key: {key}")
 

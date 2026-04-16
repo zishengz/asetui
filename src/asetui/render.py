@@ -17,6 +17,7 @@ RENDER_WIRE = "wire"
 RENDER_BALLSTICK = "ballstick"
 RENDER_CPK = "cpk"
 CELL_ASPECT_Y = 0.5
+LABEL_DEPTH_TOLERANCE = 0.15  # 0 = only front-most atom; 1 = show all
 
 
 @dataclass
@@ -69,6 +70,7 @@ class Scene:
     project_y: object
     min_z: float
     max_z: float
+    scale: float
 
 
 def _euler_rotation(yaw: float, pitch: float) -> np.ndarray:
@@ -115,7 +117,7 @@ def _projector(span: float, plot_width: int, plot_height: int):
         pixel = -value * scale * CELL_ASPECT_Y + (plot_height - 1) / 2.0
         return max(0, min(plot_height - 1, round(pixel)))
 
-    return project_x, project_y
+    return project_x, project_y, scale
 
 
 def _bond_pairs(atoms: Atoms) -> list[tuple[int, int]]:
@@ -168,7 +170,7 @@ def _build_scene(prepared: PreparedAtoms, options: RenderOptions) -> Scene:
     zs = rotated[:, 2]
     radius = prepared.base_radius / max(options.zoom, 1e-6)
     span = max(radius * 2.4, 1e-9)
-    project_x, project_y = _projector(span, plot_width, plot_height)
+    project_x, project_y, scale = _projector(span, plot_width, plot_height)
 
     return Scene(
         xs=xs,
@@ -183,6 +185,7 @@ def _build_scene(prepared: PreparedAtoms, options: RenderOptions) -> Scene:
         project_y=project_y,
         min_z=float(zs.min()),
         max_z=float(zs.max()),
+        scale=scale,
     )
 
 
@@ -312,6 +315,35 @@ def _wire_atom_token(symbol: str, index: int, label_mode: str, depth: float) -> 
     return f"{left}{core}{right}"
 
 
+def _select_label_indices(
+    scene: Scene,
+    labels: list[str],
+    ordering: list[int],
+    depths: list[list[float]],
+) -> set:
+    claimed: set[tuple[int, int]] = set()
+    visible: set[int] = set()
+    for index in reversed(ordering):
+        label = labels[index]
+        cx = scene.project_x(float(scene.xs[index]))
+        cy = scene.project_y(float(scene.ys[index]))
+        if cy < 0 or cy >= scene.plot_height or cx < 0 or cx >= scene.plot_width:
+            continue
+        atom_depth = _normalize_depth(float(scene.zs[index]), scene.min_z, scene.max_z)
+        if atom_depth < depths[cy][cx] - LABEL_DEPTH_TOLERANCE:
+            continue
+        start_col = cx - len(label) // 2
+        end_col = start_col + len(label)
+        if start_col < 0 or end_col > scene.plot_width:
+            continue
+        cells = {(cy, start_col + offset) for offset in range(len(label))}
+        if cells & claimed:
+            continue
+        claimed |= cells
+        visible.add(index)
+    return visible
+
+
 def _overlay_label(
     canvas: list[list[str]],
     colors: list[list[int]],
@@ -399,6 +431,7 @@ def _build_ballstick_frame(prepared: PreparedAtoms, options: RenderOptions, scen
         _draw_ballstick_line(canvas, colors, depths, midpoint, stop, right_depth, int(scene.numbers[right]))
 
     ordering = sorted(range(len(prepared.numbers)), key=lambda index: float(scene.zs[index]))
+
     for index in ordering:
         cx = scene.project_x(float(scene.xs[index]))
         cy = scene.project_y(float(scene.ys[index]))
@@ -420,19 +453,16 @@ def _build_ballstick_frame(prepared: PreparedAtoms, options: RenderOptions, scen
                 colors[row][col] = int(scene.numbers[index])
                 depths[row][col] = atom_depth
 
-        if options.label_mode != "off":
-            label_text = scene.symbols[index] if options.label_mode == "symbol" else str(index)
-            _overlay_label(
-                canvas,
-                colors,
-                depths,
-                label_mask,
-                cy,
-                cx,
-                label_text,
-                int(scene.numbers[index]),
-                atom_depth,
-            )
+    if options.label_mode != "off":
+        label_texts = [scene.symbols[i] if options.label_mode == "symbol" else str(i) for i in range(len(scene.symbols))]
+        visible_labels = _select_label_indices(scene, label_texts, ordering, depths)
+        for index in reversed(ordering):
+            if index not in visible_labels:
+                continue
+            atom_depth = _normalize_depth(float(scene.zs[index]), scene.min_z, scene.max_z)
+            cx = scene.project_x(float(scene.xs[index]))
+            cy = scene.project_y(float(scene.ys[index]))
+            _overlay_label(canvas, colors, depths, label_mask, cy, cx, label_texts[index], int(scene.numbers[index]), atom_depth)
 
     return Frame(
         title=f"asetui  {prepared.formula}  atoms={len(prepared.numbers)}",
@@ -452,13 +482,14 @@ def _build_cpk_frame(prepared: PreparedAtoms, options: RenderOptions, scene: Sce
     label_mask = [[False for _ in range(scene.plot_width)] for _ in range(scene.plot_height)]
 
     ordering = sorted(range(len(prepared.numbers)), key=lambda index: float(scene.zs[index]))
+
     for index in ordering:
         cx = scene.project_x(float(scene.xs[index]))
         cy = scene.project_y(float(scene.ys[index]))
         atom_depth = _normalize_depth(float(scene.zs[index]), scene.min_z, scene.max_z)
         cov_radius = float(scene.radii[index])
-        radius = (3.5 + cov_radius * 6.2 + 0.65 * ((atom_depth + 1.0) * 0.5)) * options.zoom
-        y_radius = max(1.8, radius * CELL_ASPECT_Y)
+        radius = max(1.0, 0.667 * cov_radius * scene.scale * options.zoom)
+        y_radius = max(0.5, radius * CELL_ASPECT_Y)
         core = "█" if atom_depth > 0.33 else "▓" if atom_depth > -0.33 else "▒"
         rim = "▓" if atom_depth > -0.2 else "▒"
         for row in range(max(0, int(cy - y_radius - 1)), min(scene.plot_height, int(cy + y_radius + 2))):
@@ -472,19 +503,16 @@ def _build_cpk_frame(prepared: PreparedAtoms, options: RenderOptions, scene: Sce
                 colors[row][col] = int(scene.numbers[index])
                 depths[row][col] = atom_depth
 
-        if options.label_mode != "off":
-            label_text = scene.symbols[index] if options.label_mode == "symbol" else str(index)
-            _overlay_label(
-                canvas,
-                colors,
-                depths,
-                label_mask,
-                cy,
-                cx,
-                label_text,
-                int(scene.numbers[index]),
-                atom_depth,
-            )
+    if options.label_mode != "off":
+        label_texts = [scene.symbols[i] if options.label_mode == "symbol" else str(i) for i in range(len(scene.symbols))]
+        visible_labels = _select_label_indices(scene, label_texts, ordering, depths)
+        for index in reversed(ordering):
+            if index not in visible_labels:
+                continue
+            atom_depth = _normalize_depth(float(scene.zs[index]), scene.min_z, scene.max_z)
+            cx = scene.project_x(float(scene.xs[index]))
+            cy = scene.project_y(float(scene.ys[index]))
+            _overlay_label(canvas, colors, depths, label_mask, cy, cx, label_texts[index], int(scene.numbers[index]), atom_depth)
 
     return Frame(
         title=f"asetui  {prepared.formula}  atoms={len(prepared.numbers)}",
