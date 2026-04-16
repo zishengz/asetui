@@ -106,9 +106,9 @@ def _preset_orientation(key: str) -> np.ndarray:
         x3 = np.array([0.0, 1.0, 0.0])
         x2 = np.array([0.0, 0.0, 1.0])
     elif key == "2":
-        # Side: look along +x, up = +z
+        # Side: look along +x, up = +y (CCW 90° from z-up)
         x3 = np.array([1.0, 0.0, 0.0])
-        x2 = np.array([0.0, 0.0, 1.0])
+        x2 = np.array([0.0, 1.0, 0.0])
     elif key == "3":
         # Top: look along +z, up = +y
         x3 = np.array([0.0, 0.0, 1.0])
