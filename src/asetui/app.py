@@ -90,12 +90,11 @@ def _zoom_factor(state: AppState) -> float:
 
 def _preset_orientation(key: str) -> np.ndarray:
     if key == "1":
-        # Front: look along +y, up = +z, right = +x
-        # x1 is set explicitly (not cross product) to avoid the mirrored-x
-        # issue that arises from cross([0,0,1],[0,1,0]) = [-1,0,0].
+        # Front: look along -y, up = +z, right = +x (right-handed, det=+1)
+        # Looking along +y forces screen-right=-x (left-handed), inverting rotations.
         x1 = np.array([1.0, 0.0, 0.0])
         x2 = np.array([0.0, 0.0, 1.0])
-        x3 = np.array([0.0, 1.0, 0.0])
+        x3 = np.array([0.0, -1.0, 0.0])
         return np.array([x1, x2, x3], dtype=float).T
     elif key == "2":
         # Side: look along +x, up = +z, right = +y
