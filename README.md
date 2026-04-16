@@ -27,6 +27,20 @@ Or from a local clone:
 pip install -e .
 ```
 
+### Making `atui` available in your shell
+
+`pip install --user` places the `atui` script in `~/.local/bin` (Linux) or
+`~/Library/Python/<version>/bin` (macOS). If that directory is not already on
+your `PATH`, add it to your shell config (`~/.bashrc`, `~/.zshrc`, etc.):
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+On HPC clusters where you install into a custom prefix or a conda/venv
+environment, the script lands in `<prefix>/bin`. Make sure that directory is on
+your `PATH` or call `atui` with the full path.
+
 ## Usage
 
 ```bash
