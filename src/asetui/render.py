@@ -101,7 +101,7 @@ def _rotate_positions(
     orientation: NDArray[np.float64] | None,
 ) -> np.ndarray:
     rotation = orientation if orientation is not None else _euler_rotation(yaw, pitch)
-    return positions @ rotation.T
+    return positions @ rotation
 
 
 def _projector(span: float, plot_width: int, plot_height: int):
