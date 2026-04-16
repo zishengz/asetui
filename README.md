@@ -1,19 +1,22 @@
 # asetui
 
-`asetui` is a lightweight in-terminal viewer for ASE `Atoms` objects — no GUI, no X11, no display server required.
+`asetui` is a lightweight terminal viewer for ASE `Atoms` objects. It lets you inspect molecules, slabs, and trajectories locally or over SSH, without a GUI, X11, or a display server.
 
-Inspect crystal structures, molecules, and slabs directly from your terminal, either locally or over SSH on remote HPC clusters where launching any GUI application is slow or unavailable.
+## Gallery
+
+
+| Molecule | Surface | Relax | IRC |
+|--|--|--|--|
+| <img src="examples/record1.gif" width="420" alt="asetui example 1"> | <img src="examples/record2.gif" width="420" alt="asetui example 2"> | <img src="examples/record4.gif" width="420" alt="asetui example 3"> | <img src="examples/record3.gif" width="420" alt="asetui example 4"> |
 
 ## Features
 
-- Reads all ASE-supported formats (`xyz`, `cif`, `vasp`, and more)
+- Reads all ASE-supported formats (`xyz`, `cif`, `vasp`, etc)
 - Runs entirely in the terminal over any SSH connection
-- Jmol-style element coloring
 - Interactive rotation, translation, and zoom
-- Multiple render modes: `wire`, `ballstick`, `cpk`
 - Preset views: front (`1`), side (`2`), top (`3`)
-- Atom labels cycling through element symbol, index, or off
-- Multi-frame trajectory support with `[` / `]` navigation
+- Label modes: element symbol, index, or off
+- Trajectory navigation with `[` / `]`
 
 ## Install
 
@@ -21,7 +24,7 @@ Inspect crystal structures, molecules, and slabs directly from your terminal, ei
 pip install --user git+https://github.com/zishengz/asetui
 ```
 
-Or from a local clone:
+From a local clone:
 
 ```bash
 pip install -e .
@@ -29,24 +32,25 @@ pip install -e .
 
 ### Making `atui` available in your shell
 
-`pip install --user` places the `atui` script in `~/.local/bin` (Linux) or
-`~/Library/Python/<version>/bin` (macOS). If that directory is not already on
-your `PATH`, add it to your shell config (`~/.bashrc`, `~/.zshrc`, etc.):
+`pip install --user` places `atui` in `~/.local/bin` (Linux) or
+`~/Library/Python/<version>/bin` (macOS). If needed, add that directory to your
+`PATH`:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-On HPC clusters where you install into a custom prefix or a conda/venv
-environment, the script lands in `<prefix>/bin`. Make sure that directory is on
-your `PATH` or call `atui` with the full path.
+On HPC clusters or in conda/venv installs, the script is usually in
+`<prefix>/bin`; add that to `PATH` or call `atui` with the full path.
 
 ## Usage
 
 ```bash
-atui examples/H2O.xyz                      # single structure
-atui examples/Cu111_CO.vasp                # VASP format
+atui examples/phenol.xyz                   # single molecule
+atui examples/Cu111_CO.vasp                # slab in VASP format
+atui examples/sn2_irc.xyz                  # trajectory
 atui examples/Cu4_opt_traj.xyz.gz          # gzipped trajectory
+atui examples/Cu4_opt_traj.xyz.gz@::3      # every 3rd frame
 atui examples/Cu4_opt_traj.xyz.gz@:5       # first 5 frames
 atui examples/Cu4_opt_traj.xyz.gz@-1       # last frame only
 ```
@@ -71,11 +75,7 @@ atui examples/Cu4_opt_traj.xyz.gz@-1       # last frame only
 
 - `wire`: character-based view with bonds and depth cues
 - `ballstick`: filled atom blobs with split-color bonds
-- `cpk`: space-filling view, atom size proportional to covalent radius
-
-## Why
-
-Visualizing structures on remote machines typically means tunneling X11, waiting for a slow GUI to load over a high-latency connection, or copying files locally first. `asetui` runs in any terminal, responds instantly, and requires nothing beyond Python and ASE.
+- `cpk`: space-filling view with atom size based on covalent radius
 
 ## To-dos
 

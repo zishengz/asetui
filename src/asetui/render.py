@@ -18,6 +18,7 @@ RENDER_BALLSTICK = "ballstick"
 RENDER_CPK = "cpk"
 CELL_ASPECT_Y = 0.5
 LABEL_DEPTH_TOLERANCE = 0.15  # 0 = only front-most atom; 1 = show all
+CPK_RADIUS_SCALE = 0.8
 
 
 @dataclass
@@ -664,7 +665,7 @@ def _build_cpk_frame(prepared: PreparedAtoms, options: RenderOptions, scene: Sce
     for index in scene.z_order:
         atom_index = int(index)
         atom_depth = float(scene.depths[index])
-        radius = max(1.0, 0.667 * float(prepared.radii[index]) * scene.scale * options.zoom)
+        radius = max(1.0, CPK_RADIUS_SCALE * float(prepared.radii[index]) * scene.scale)
         core = "█" if atom_depth > 0.33 else "▓" if atom_depth > -0.33 else "▒"
         rim = "▓" if atom_depth > -0.2 else "▒"
         _draw_disc(

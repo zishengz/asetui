@@ -111,6 +111,28 @@ def test_cpk_mode_uses_large_atoms_without_wire_bonds() -> None:
     assert not any(char in flattened for char in ".:/\\'`,-")
 
 
+def test_cpk_zoom_scaling_is_not_quadratic() -> None:
+    atoms = Atoms("O", positions=[(0.0, 0.0, 0.0)])
+
+    base = build_frame(atoms, RenderOptions(width=36, height=14, render_mode=RENDER_CPK, zoom=1.0))
+    zoomed = build_frame(atoms, RenderOptions(width=36, height=14, render_mode=RENDER_CPK, zoom=2.0))
+
+    def width(frame: object) -> int:
+        cols = [
+            col
+            for row in frame.canvas
+            for col, char in enumerate(row)
+            if char != " "
+        ]
+        return max(cols) - min(cols) + 1
+
+    base_width = width(base)
+    zoomed_width = width(zoomed)
+
+    assert zoomed_width > base_width
+    assert zoomed_width <= base_width * 2 + 1
+
+
 def test_overlay_label_is_all_or_nothing_when_clipped() -> None:
     canvas = [[" " for _ in range(6)]]
     colors = [[0 for _ in range(6)]]
